@@ -1,11 +1,13 @@
+import 'package:async/async.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:tictacdash/ttt_grid_widget.dart';
 import 'package:tictacdash/user_provider.dart';
 
 class TicTacToePage extends StatelessWidget {
+  final String documentId;
+  TicTacToePage({this.documentId});
   Firestore _store = Firestore.instance;
 
   int size = 3;
@@ -13,6 +15,20 @@ class TicTacToePage extends StatelessWidget {
   bool isMyTurn = false;
   bool isPlayer = false;
   bool isCreator = false;
+  Stream<DocumentSnapshot> getStream(
+      String documentId, String uid, String roomName) {
+    print(documentId);
+    if (documentId != null) {
+      return _store.collection('rooms').document(documentId).snapshots();
+    } else {
+      return _store
+          .collection('rooms')
+          .where('creator', isEqualTo: uid)
+          .where('name', isEqualTo: roomName)
+          .snapshots()
+          .map((event) => event.documents.first);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -24,18 +40,14 @@ class TicTacToePage extends StatelessWidget {
       body: SafeArea(
         child: Container(
           child: Center(
-            child: StreamBuilder(
-              stream: _store
-                  .collection('rooms')
-                  .where('creator', isEqualTo: uid)
-                  .where('name', isEqualTo: roomName)
-                  .snapshots(),
+            child: StreamBuilder<DocumentSnapshot>(
+              stream: getStream(documentId, uid, roomName),
               builder: (BuildContext context,
-                  AsyncSnapshot<QuerySnapshot> snapshot) {
+                  AsyncSnapshot<DocumentSnapshot> snapshot) {
                 if (!snapshot.hasData) {
                   return Center(child: CircularProgressIndicator());
                 }
-                DocumentSnapshot ds = snapshot.data.documents.first;
+                DocumentSnapshot ds = snapshot.data;
                 String room = ds['room'];
                 if (room == "") {
                   room = "000000000";
