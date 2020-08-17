@@ -8,10 +8,13 @@ import 'package:tictacdash/user_provider.dart';
 class HomePage extends StatelessWidget {
   String name = "";
   String roomName = "";
+  String uid = "";
   TextEditingController tec = TextEditingController();
   //Todo: Fix hot restart bug
   @override
   Widget build(BuildContext context) {
+    uid = Provider.of<UserChangeNotifier>(context).userId;
+
     return Scaffold(
       floatingActionButton: FloatingActionButton(
         onPressed: () => launchPopup(context),
@@ -41,6 +44,8 @@ class HomePage extends StatelessWidget {
                         itemBuilder: (BuildContext context, int position) {
                           String name =
                               qs.data.documents[position].data["name"];
+                          String creator =
+                              qs.data.documents[position].data["creator"];
                           bool active =
                               qs.data.documents[position].data['active'];
                           String player2 =
@@ -50,7 +55,29 @@ class HomePage extends StatelessWidget {
                           counter = player2 == "" ? counter + 1 : counter;
                           String players = "$counter/ 2";
                           return ListTile(
-                              title: Text(name), trailing: Text(players));
+                              onTap: () {
+                                if (uid == creator) {
+                                  Provider.of<UserChangeNotifier>(context,
+                                          listen: false)
+                                      .updateRoomName(name);
+                                  Navigator.pushReplacement(context,
+                                      MaterialPageRoute(
+                                          builder: (BuildContext context) {
+                                    return TicTacToePage();
+                                  }));
+                                } else {
+                                  _store
+                                      .collection('rooms')
+                                      .document(qs
+                                          .data.documents[position].documentID)
+                                      .updateData({
+                                    'player': uid,
+                                    'player2Name': tec.text,
+                                  });
+                                }
+                              },
+                              title: Text(name),
+                              trailing: Text(players));
                         });
                   },
                 ),
@@ -90,19 +117,14 @@ class HomePage extends StatelessWidget {
         });
   }
 
-  FirebaseAuth _auth = FirebaseAuth.instance;
   Firestore _store = Firestore.instance;
   void createRoom(BuildContext context) async {
     name = tec.text;
     if (roomName == "" || name == "") {
       return;
     }
-    AuthResult result = await _auth.signInAnonymously();
-    String uid = result.user.uid;
-    Provider.of<UserChangeNotifier>(context, listen: false).updateUserId(uid);
     Provider.of<UserChangeNotifier>(context, listen: false)
         .updateRoomName(roomName);
-
     //Creates or updates user id
     _store.collection('users').document(uid).setData(({
           'username': name,
@@ -141,6 +163,7 @@ class HomePage extends StatelessWidget {
       }
     });
     /* ;*/
+
     Navigator.pushReplacement(context,
         MaterialPageRoute(builder: (BuildContext context) {
       return TicTacToePage();
