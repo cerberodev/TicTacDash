@@ -1,7 +1,9 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:tictacdash/tictactoe_page.dart';
+import 'package:tictacdash/user_provider.dart';
 
 class HomePage extends StatelessWidget {
   String name = "";
@@ -97,6 +99,10 @@ class HomePage extends StatelessWidget {
     }
     AuthResult result = await _auth.signInAnonymously();
     String uid = result.user.uid;
+    Provider.of<UserChangeNotifier>(context, listen: false).updateUserId(uid);
+    Provider.of<UserChangeNotifier>(context, listen: false)
+        .updateRoomName(roomName);
+
     //Creates or updates user id
     _store.collection('users').document(uid).setData(({
           'username': name,
@@ -115,7 +121,9 @@ class HomePage extends StatelessWidget {
           'active': true,
           'creator': uid,
           'name': roomName,
+          'player1Name': name,
           'player': '',
+          'player2Name': '',
         });
       } else {
         _store.collection('rooms').document().setData({
@@ -123,6 +131,8 @@ class HomePage extends StatelessWidget {
           'creator': uid,
           'name': roomName,
           'player': '',
+          'player1Name': name,
+          'player2Name': '',
         });
       }
     });
