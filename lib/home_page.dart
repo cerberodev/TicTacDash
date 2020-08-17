@@ -42,6 +42,8 @@ class HomePage extends StatelessWidget {
                     return ListView.builder(
                         itemCount: qs.data.documents.length,
                         itemBuilder: (BuildContext context, int position) {
+                          String documentId =
+                              qs.data.documents[position].documentID;
                           String name =
                               qs.data.documents[position].data["name"];
                           String creator =
@@ -49,23 +51,32 @@ class HomePage extends StatelessWidget {
                           bool active =
                               qs.data.documents[position].data['active'];
                           String player2 =
-                              qs.data.documents[position].data['player2'];
+                              qs.data.documents[position].data['player'];
                           int counter = 0;
                           counter = active ? counter + 1 : counter;
-                          counter = player2 == "" ? counter + 1 : counter;
+                          counter = player2 != "" ? counter + 1 : counter;
                           String players = "$counter/ 2";
                           return ListTile(
                               onTap: () {
+                                print(uid);
+                                print(player2);
                                 if (uid == creator) {
                                   Provider.of<UserChangeNotifier>(context,
                                           listen: false)
                                       .updateRoomName(name);
-                                  Navigator.pushReplacement(context,
-                                      MaterialPageRoute(
-                                          builder: (BuildContext context) {
-                                    return TicTacToePage();
+                                  Navigator.push(context, MaterialPageRoute(
+                                      builder: (BuildContext context) {
+                                    return TicTacToePage(
+                                      documentId: documentId,
+                                    );
                                   }));
                                 } else {
+                                  if (counter == 2 && player2 != uid) {
+                                    return;
+                                  }
+                                  Provider.of<UserChangeNotifier>(context,
+                                          listen: false)
+                                      .updateRoomName(name);
                                   _store
                                       .collection('rooms')
                                       .document(qs
@@ -74,6 +85,12 @@ class HomePage extends StatelessWidget {
                                     'player': uid,
                                     'player2Name': tec.text,
                                   });
+                                  Navigator.push(context, MaterialPageRoute(
+                                      builder: (BuildContext context) {
+                                    return TicTacToePage(
+                                      documentId: documentId,
+                                    );
+                                  }));
                                 }
                               },
                               title: Text(name),
@@ -164,8 +181,7 @@ class HomePage extends StatelessWidget {
     });
     /* ;*/
 
-    Navigator.pushReplacement(context,
-        MaterialPageRoute(builder: (BuildContext context) {
+    Navigator.push(context, MaterialPageRoute(builder: (BuildContext context) {
       return TicTacToePage();
     }));
   }
