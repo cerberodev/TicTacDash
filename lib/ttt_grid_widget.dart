@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
 class TTTGridWidget extends StatefulWidget {
@@ -6,8 +7,14 @@ class TTTGridWidget extends StatefulWidget {
   bool isMyTurn;
   final bool isPlayer;
   final int size;
+  final String documentId;
   TTTGridWidget(
-      {this.room, this.isPlayer, this.isCreator, this.isMyTurn, this.size});
+      {this.documentId,
+      this.room,
+      this.isPlayer,
+      this.isCreator,
+      this.isMyTurn,
+      this.size});
 
   @override
   _TTTGridWidgetState createState() => _TTTGridWidgetState();
@@ -17,6 +24,7 @@ class _TTTGridWidgetState extends State<TTTGridWidget> {
   @override
   Widget build(BuildContext context) {
     return GridView.builder(
+      shrinkWrap: true,
       itemCount: widget.room.length,
       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: widget.size),
@@ -55,6 +63,8 @@ class _TTTGridWidgetState extends State<TTTGridWidget> {
     }
   }
 
+  Firestore _store = Firestore.instance;
+
   void updateMove(int position) {
     print(position);
     String myMove = "0";
@@ -75,10 +85,13 @@ class _TTTGridWidgetState extends State<TTTGridWidget> {
         if (end > 9) {
           end = 9;
         }
-        widget.room = widget.room.substring(0, start) +
+        String tempRoom = widget.room.substring(0, start) +
             myMove +
             widget.room.substring(end, 9);
-        setState(() {});
+        _store.collection("rooms").document(widget.documentId).updateData({
+          "room": tempRoom,
+          "turn": widget.isCreator ? "challenger" : "creator"
+        });
       }
     }
   }

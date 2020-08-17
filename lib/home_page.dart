@@ -124,6 +124,8 @@ class HomePage extends StatelessWidget {
           'player1Name': name,
           'player': '',
           'player2Name': '',
+          'room': '000000000',
+          'turn': 'creator',
         });
       } else {
         _store.collection('rooms').document().setData({
@@ -133,6 +135,8 @@ class HomePage extends StatelessWidget {
           'player': '',
           'player1Name': name,
           'player2Name': '',
+          'room': '000000000',
+          'turn': 'creator',
         });
       }
     });
